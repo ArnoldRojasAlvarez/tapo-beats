@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolabs.com?font=Fira+Code&weight=600&size=30&pause=1000&color=7AA2F7&center=true&vCenter=true&width=500&lines=TapoBeats+%F0%9F%92%A1%F0%9F%8E%B5;Music-Reactive+Smart+Lighting;Alexa+Voice+Control" alt="TapoBeats" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=30&pause=1000&color=7AA2F7&center=true&vCenter=true&width=500&lines=TapoBeats+%F0%9F%92%A1%F0%9F%8E%B5;Music-Reactive+Smart+Lighting;Alexa+Voice+Control;PC+Control+via+Voice" alt="TapoBeats" />
 
 <br/>
 
@@ -11,9 +11,9 @@
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 **Control your TP-Link Tapo smart bulbs with music in real-time.**
-Beat detection, frequency analysis, 7 scene presets, and hands-free Alexa voice control.
+Beat detection, frequency analysis, 7 scene presets, PC automation, and hands-free Alexa voice control.
 
-[Features](#features) · [Setup](#setup) · [Voice Commands](#voice-commands) · [API](#ifttt-webhook-api)
+[Features](#features) · [Setup](#setup) · [Voice Commands](#voice-commands) · [PC Control](#pc-control) · [Auto-Start](#auto-start) · [API](#ifttt-webhook-api)
 
 </div>
 
@@ -50,6 +50,16 @@ Beat detection, frequency analysis, 7 scene presets, and hands-free Alexa voice 
     <td width="50%">
       <h3>🎙️ Offline Voice Control</h3>
       <p>Local speech recognition via Vosk — works without internet, dual-language (EN/ES).</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>🖥️ PC Control</h3>
+      <p>Shutdown, restart, sleep, lock, volume control, and launch apps — all by voice through Alexa.</p>
+    </td>
+    <td width="50%">
+      <h3>🚀 Auto-Start</h3>
+      <p>Runs silently on Windows startup via Task Scheduler. No manual launch needed.</p>
     </td>
   </tr>
 </table>
@@ -123,10 +133,60 @@ Say *"Alexa, abre Jarvis"* followed by:
 |----------|----------|
 | **Scenes** | `party` · `chill` · `gaming` · `movie` · `sunset` · `focus` · `sex` |
 | **Music Modes** | `sync` · `spectrum` · `energy` · `pulse` · `chase` |
-| **Power** | `on` / `encender` · `off` / `apagar` |
+| **Power (lights)** | `on` / `encender` · `off` / `apagar` |
 | **Stop** | `stop` / `para` / `detener` |
+| **PC Power** | `apagar pc` · `reiniciar` · `suspender` · `bloquear` · `cancelar apagado` |
+| **Volume** | `subir volumen` · `bajar volumen` · `mutear` |
+| **Apps** | `spotify` · `youtube` · `crunchyroll` · `whatsapp` · `outlook` · `steam` · `wallpaper` |
 
-> Supports both English and Spanish keywords.
+> Supports both English and Spanish keywords. PC commands require the server running on the target machine.
+
+---
+
+## PC Control
+
+Control your Windows PC remotely through Alexa voice commands.
+
+| Command | Action |
+|---------|--------|
+| `apagar pc` / `shutdown` | Shuts down in 5 seconds |
+| `reiniciar` / `restart` | Restarts in 5 seconds |
+| `suspender` / `sleep` | Suspends (sleep mode) |
+| `bloquear` / `lock` | Locks the workstation |
+| `cancelar apagado` | Cancels a pending shutdown |
+| `mutear` / `mute` | Toggles mute |
+| `subir volumen` / `volume up` | Increases volume |
+| `bajar volumen` / `volume down` | Decreases volume |
+| `spotify` | Opens Spotify |
+| `youtube` | Opens YouTube in Edge |
+| `crunchyroll` | Opens Crunchyroll |
+| `whatsapp` | Opens WhatsApp |
+| `outlook` / `correo` | Opens Outlook |
+| `steam` | Opens Steam |
+| `wallpaper` | Opens Wallpaper Engine |
+
+> "apagar pc" shuts down the PC. "apagar" alone turns off the lights. The system uses longest-match-first to avoid conflicts.
+
+---
+
+## Auto-Start
+
+Run TapoBeats automatically when Windows starts:
+
+```bash
+# Option 1: Manual launch
+start_tapobeats.bat
+
+# Option 2: Install auto-start (run as Administrator, once)
+install_autostart.bat
+
+# To remove auto-start
+schtasks /delete /tn "TapoBeats" /f
+```
+
+The silent launcher (`start_silent.vbs`) runs Flask + ngrok in the background with no console window.
+
+> **Tip:** Claim a [free static ngrok domain](https://dashboard.ngrok.com/domains) so your Alexa endpoint URL never changes between restarts.
 
 ---
 
@@ -143,6 +203,11 @@ Say *"Alexa, abre Jarvis"* followed by:
 {"action": "music:start", "mode": "spectrum"}
 {"action": "power:on"}
 {"action": "power:off"}
+
+// PC control
+{"action": "pc:shutdown"}
+{"action": "pc:spotify"}
+{"action": "pc:volume_up"}
 ```
 
 ---
@@ -176,7 +241,8 @@ tapo-beats/
 │   ├── scene_manager.py      # Scene presets
 │   ├── web_ui.py             # Flask dashboard + APIs
 │   ├── alexa_skill.py        # Alexa Skill handlers
-│   └── voice_control.py      # Vosk offline recognition
+│   ├── voice_control.py      # Vosk offline recognition
+│   └── pc_control.py         # PC automation (shutdown, apps, volume)
 ├── scenes/
 │   └── default_scenes.json
 ├── templates/
@@ -184,6 +250,9 @@ tapo-beats/
 ├── static/
 │   └── style.css
 ├── alexa_model.json           # Alexa interaction model
+├── start_tapobeats.bat        # Manual launcher
+├── start_silent.vbs           # Silent background launcher
+├── install_autostart.bat      # Auto-start installer
 ├── requirements.txt
 └── .env.example
 ```
