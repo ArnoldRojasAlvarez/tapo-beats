@@ -19,7 +19,12 @@
             "escena {command}",
             "cambia a {command}",
             "ponme {command}",
-            "luces {command}"
+            "luces {command}",
+            "abre {command}",
+            "abrir {command}",
+            "open {command}",
+            "ejecuta {command}",
+            "lanza {command}"
           ]
         },
         {
@@ -60,7 +65,22 @@
             {"name": {"value": "music", "synonyms": ["musica", "start music"]}},
             {"name": {"value": "stop", "synonyms": ["para", "parar", "detener"]}},
             {"name": {"value": "on", "synonyms": ["encender", "prender"]}},
-            {"name": {"value": "off", "synonyms": ["apagar"]}}
+            {"name": {"value": "off", "synonyms": ["apagar"]}},
+            {"name": {"value": "apagar pc", "synonyms": ["shutdown", "apagar computadora"]}},
+            {"name": {"value": "reiniciar", "synonyms": ["restart", "reiniciar pc"]}},
+            {"name": {"value": "suspender", "synonyms": ["dormir", "sleep", "dormir pc"]}},
+            {"name": {"value": "bloquear", "synonyms": ["lock", "bloquear pc"]}},
+            {"name": {"value": "cancelar apagado", "synonyms": ["cancel shutdown"]}},
+            {"name": {"value": "mutear", "synonyms": ["mute", "silenciar"]}},
+            {"name": {"value": "subir volumen", "synonyms": ["volume up", "mas volumen"]}},
+            {"name": {"value": "bajar volumen", "synonyms": ["volume down", "menos volumen"]}},
+            {"name": {"value": "spotify", "synonyms": ["abrir spotify", "open spotify"]}},
+            {"name": {"value": "crunchyroll", "synonyms": ["abrir crunchyroll"]}},
+            {"name": {"value": "whatsapp", "synonyms": ["abrir whatsapp", "open whatsapp"]}},
+            {"name": {"value": "outlook", "synonyms": ["correo", "abrir correo", "abrir outlook"]}},
+            {"name": {"value": "steam", "synonyms": ["abrir steam", "open steam"]}},
+            {"name": {"value": "wallpaper", "synonyms": ["wallpaper engine"]}},
+            {"name": {"value": "youtube", "synonyms": ["abrir youtube", "open youtube"]}}
           ]
         }
       ]

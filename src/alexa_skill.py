@@ -1,4 +1,4 @@
-"""Alexa Skill handler for TapoBeats - invocation name: 'eco'."""
+"""Alexa Skill handler for TapoBeats - invocation name: 'Jarvis'."""
 
 import asyncio
 import logging
@@ -8,6 +8,8 @@ from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_model import Response
+
+from .pc_control import execute_pc_command
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ _COMMANDS = {
     "sync": ("music_mode", "sync"),
     "music": ("music_mode", "sync"),
     "musica": ("music_mode", "sync"),
-    # Power
+    # Power (lights)
     "encender": ("power", "on"),
     "prender": ("power", "on"),
     "apagar": ("power", "off"),
@@ -50,6 +52,33 @@ _COMMANDS = {
     "para": ("music_stop", None),
     "parar": ("music_stop", None),
     "detener": ("music_stop", None),
+    # PC control
+    "apagar pc": ("pc", "shutdown"),
+    "shutdown": ("pc", "shutdown"),
+    "reiniciar": ("pc", "restart"),
+    "restart": ("pc", "restart"),
+    "suspender": ("pc", "sleep"),
+    "dormir": ("pc", "sleep"),
+    "sleep": ("pc", "sleep"),
+    "bloquear": ("pc", "lock"),
+    "lock": ("pc", "lock"),
+    "cancelar apagado": ("pc", "cancel_shutdown"),
+    # Volume
+    "mutear": ("pc", "mute"),
+    "mute": ("pc", "mute"),
+    "subir volumen": ("pc", "volume_up"),
+    "volume up": ("pc", "volume_up"),
+    "bajar volumen": ("pc", "volume_down"),
+    "volume down": ("pc", "volume_down"),
+    # Apps
+    "spotify": ("pc", "spotify"),
+    "crunchyroll": ("pc", "crunchyroll"),
+    "whatsapp": ("pc", "whatsapp"),
+    "outlook": ("pc", "outlook"),
+    "correo": ("pc", "outlook"),
+    "steam": ("pc", "steam"),
+    "wallpaper": ("pc", "wallpaper"),
+    "youtube": ("pc", "youtube"),
 }
 
 
@@ -64,7 +93,9 @@ def _execute_command(command: str) -> str:
     command = command.lower().strip()
     logger.info("Alexa command: '%s'", command)
 
-    for keyword, (cmd_type, cmd_value) in _COMMANDS.items():
+    # Sort by keyword length (longest first) for greedy matching
+    for keyword in sorted(_COMMANDS, key=len, reverse=True):
+        cmd_type, cmd_value = _COMMANDS[keyword]
         if keyword in command:
             logger.info("Matched: '%s' -> %s(%s)", keyword, cmd_type, cmd_value)
             if cmd_type == "scene":
@@ -87,6 +118,8 @@ def _execute_command(command: str) -> str:
                 else:
                     _run_async(_controller.turn_off())
                     return "Luces apagadas"
+            elif cmd_type == "pc":
+                return execute_pc_command(cmd_value)
 
     return f"No entendi el comando: {command}"
 
@@ -98,7 +131,7 @@ class LaunchHandler(AbstractRequestHandler):
         return is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input: HandlerInput) -> Response:
-        speech = "Listo. Dime un comando como party, sync, o apagar."
+        speech = "Listo. Dime un comando como party, spotify, apagar pc, o sync."
         return (
             handler_input.response_builder
             .speak(speech)
@@ -139,7 +172,10 @@ class HelpHandler(AbstractRequestHandler):
     def handle(self, handler_input: HandlerInput) -> Response:
         speech = (
             "Puedes decir: party, gaming, chill, movie, sunset, focus, sex, "
-            "sync, spectrum, energy, pulse, chase, stop, encender, o apagar."
+            "sync, spectrum, energy, pulse, chase, stop, encender, apagar, "
+            "spotify, youtube, whatsapp, steam, crunchyroll, outlook, "
+            "apagar pc, reiniciar, suspender, bloquear, mutear, "
+            "subir volumen, o bajar volumen."
         )
         return (
             handler_input.response_builder

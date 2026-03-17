@@ -15,6 +15,7 @@ from .scene_manager import SceneManager
 from .visualizer import MusicVisualizer
 from .voice_control import VoiceControl
 from .alexa_skill import skill, init_alexa_skill
+from .pc_control import execute_pc_command
 from .config import get_flask_port, get_flask_debug
 
 logger = logging.getLogger(__name__)
@@ -150,6 +151,28 @@ _ALEXA_COMMANDS = {
     "stop": ("music_stop", None),
     "para": ("music_stop", None),
     "parar": ("music_stop", None),
+    # PC control
+    "apagar pc": ("pc", "shutdown"),
+    "shutdown": ("pc", "shutdown"),
+    "reiniciar": ("pc", "restart"),
+    "restart": ("pc", "restart"),
+    "suspender": ("pc", "sleep"),
+    "dormir": ("pc", "sleep"),
+    "bloquear": ("pc", "lock"),
+    "lock": ("pc", "lock"),
+    "cancelar apagado": ("pc", "cancel_shutdown"),
+    "mutear": ("pc", "mute"),
+    "mute": ("pc", "mute"),
+    "subir volumen": ("pc", "volume_up"),
+    "bajar volumen": ("pc", "volume_down"),
+    "spotify": ("pc", "spotify"),
+    "crunchyroll": ("pc", "crunchyroll"),
+    "whatsapp": ("pc", "whatsapp"),
+    "outlook": ("pc", "outlook"),
+    "correo": ("pc", "outlook"),
+    "steam": ("pc", "steam"),
+    "wallpaper": ("pc", "wallpaper"),
+    "youtube": ("pc", "youtube"),
 }
 
 
@@ -187,9 +210,14 @@ def api_ifttt_webhook():
     elif action == "power:off":
         _run_async(_controller.turn_off())
         return jsonify({"status": "ok"})
+    elif action.startswith("pc:"):
+        pc_action = action.split(":", 1)[1].strip()
+        result = execute_pc_command(pc_action)
+        return jsonify({"status": "ok", "message": result})
 
     # Format 2: natural language from Alexa "say a phrase with text ingredient"
-    for keyword, (cmd_type, cmd_value) in _ALEXA_COMMANDS.items():
+    for keyword in sorted(_ALEXA_COMMANDS, key=len, reverse=True):
+        cmd_type, cmd_value = _ALEXA_COMMANDS[keyword]
         if keyword in action:
             logger.info("Alexa command matched: '%s' -> %s(%s)", keyword, cmd_type, cmd_value)
             if cmd_type == "scene":
@@ -211,6 +239,9 @@ def api_ifttt_webhook():
                 else:
                     _run_async(_controller.turn_off())
                 return jsonify({"status": "ok", "power": cmd_value})
+            elif cmd_type == "pc":
+                result = execute_pc_command(cmd_value)
+                return jsonify({"status": "ok", "message": result})
 
     return jsonify({"status": "error", "message": f"Unknown action: {action}"}), 400
 
@@ -283,6 +314,9 @@ def _handle_voice_action(action_type: str, action_value: str | None) -> None:
             else:
                 _run_async(_controller.turn_off())
             logger.info("Voice: power -> %s", action_value)
+        elif action_type == "pc":
+            result = execute_pc_command(action_value)
+            logger.info("Voice: PC -> %s (%s)", action_value, result)
     except Exception:
         logger.exception("Error handling voice action: %s(%s)", action_type, action_value)
 

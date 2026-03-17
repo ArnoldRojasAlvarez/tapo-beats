@@ -59,6 +59,27 @@ COMMANDS = {
     "lights on": ("power", "on"),
     "lights off": ("power", "off"),
     "luces": ("power", "on"),
+    # PC control
+    "apagar pc": ("pc", "shutdown"),
+    "shutdown pc": ("pc", "shutdown"),
+    "reiniciar": ("pc", "restart"),
+    "restart": ("pc", "restart"),
+    "suspender": ("pc", "sleep"),
+    "dormir": ("pc", "sleep"),
+    "bloquear": ("pc", "lock"),
+    "lock": ("pc", "lock"),
+    "mutear": ("pc", "mute"),
+    "mute": ("pc", "mute"),
+    "subir volumen": ("pc", "volume_up"),
+    "bajar volumen": ("pc", "volume_down"),
+    "abrir spotify": ("pc", "spotify"),
+    "open spotify": ("pc", "spotify"),
+    "abrir crunchyroll": ("pc", "crunchyroll"),
+    "abrir whatsapp": ("pc", "whatsapp"),
+    "abrir outlook": ("pc", "outlook"),
+    "abrir correo": ("pc", "outlook"),
+    "abrir steam": ("pc", "steam"),
+    "abrir youtube": ("pc", "youtube"),
 }
 
 # Multi-word commands sorted by length (longest first for greedy matching)
