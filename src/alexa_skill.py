@@ -20,6 +20,38 @@ _scene_manager = None
 _visualizer = None
 _loop = None
 
+# Ambiguous commands that need clarification
+_AMBIGUOUS = {
+    "apagar": {
+        "question": "Que apago? Luces, P.C., o una app?",
+        "options": {
+            "luces": ("power", "off"),
+            "luz": ("power", "off"),
+            "bombillos": ("power", "off"),
+            "pc": ("pc", "shutdown"),
+            "computadora": ("pc", "shutdown"),
+            "computador": ("pc", "shutdown"),
+            "todo": ("power_and_pc", "off"),
+        },
+    },
+    "encender": {
+        "question": "Que enciendo? Luces o una app?",
+        "options": {
+            "luces": ("power", "on"),
+            "luz": ("power", "on"),
+            "bombillos": ("power", "on"),
+            "spotify": ("pc", "spotify"),
+            "youtube": ("pc", "youtube"),
+            "steam": ("pc", "steam"),
+            "crunchyroll": ("pc", "crunchyroll"),
+            "whatsapp": ("pc", "whatsapp"),
+            "outlook": ("pc", "outlook"),
+            "correo": ("pc", "outlook"),
+            "wallpaper": ("pc", "wallpaper"),
+        },
+    },
+}
+
 # All recognized commands
 _COMMANDS = {
     # Scenes
@@ -42,10 +74,13 @@ _COMMANDS = {
     "sync": ("music_mode", "sync"),
     "music": ("music_mode", "sync"),
     "musica": ("music_mode", "sync"),
-    # Power (lights)
-    "encender": ("power", "on"),
+    # Power (lights) - specific versions that won't trigger ambiguity
+    "encender luces": ("power", "on"),
+    "prender luces": ("power", "on"),
+    "apagar luces": ("power", "off"),
+    "encender bombillos": ("power", "on"),
+    "apagar bombillos": ("power", "off"),
     "prender": ("power", "on"),
-    "apagar": ("power", "off"),
     "on": ("power", "on"),
     "off": ("power", "off"),
     # Stop
@@ -80,6 +115,15 @@ _COMMANDS = {
     "steam": ("pc", "steam"),
     "wallpaper": ("pc", "wallpaper"),
     "youtube": ("pc", "youtube"),
+    # Abrir apps
+    "abrir spotify": ("pc", "spotify"),
+    "abrir youtube": ("pc", "youtube"),
+    "abrir steam": ("pc", "steam"),
+    "abrir crunchyroll": ("pc", "crunchyroll"),
+    "abrir whatsapp": ("pc", "whatsapp"),
+    "abrir outlook": ("pc", "outlook"),
+    "abrir correo": ("pc", "outlook"),
+    "abrir wallpaper": ("pc", "wallpaper"),
 }
 
 # Help card content organized by category
@@ -119,8 +163,6 @@ _HELP_SPEECH = (
     "Tienes escenas, musica, control de luces, P.C. y apps."
 )
 
-_HELP_SHORT_SPEECH = "Revisa la app de Alexa para ver todos los comandos."
-
 
 def _run_async(coro):
     """Run async coroutine from sync context."""
@@ -128,49 +170,94 @@ def _run_async(coro):
     return future.result(timeout=10)
 
 
-def _execute_command(command: str) -> tuple[str, SimpleCard | None]:
-    """Execute a command and return (speech, card) tuple."""
+def _execute_action(cmd_type: str, cmd_value: str) -> str:
+    """Execute a resolved action and return speech."""
+    if cmd_type == "scene":
+        try:
+            _run_async(_scene_manager.apply_scene(cmd_value))
+            return f"{cmd_value} activado"
+        except KeyError:
+            return f"Escena {cmd_value} no encontrada"
+    elif cmd_type == "music_mode":
+        _visualizer.set_mode(cmd_value)
+        _visualizer.start()
+        return f"{cmd_value} activado"
+    elif cmd_type == "music_stop":
+        _visualizer.stop()
+        return "Listo"
+    elif cmd_type == "power":
+        if cmd_value == "on":
+            _run_async(_controller.turn_on())
+        else:
+            _run_async(_controller.turn_off())
+        return "Listo"
+    elif cmd_type == "power_and_pc":
+        _run_async(_controller.turn_off())
+        execute_pc_command("shutdown")
+        return "Apagando luces y P.C."
+    elif cmd_type == "pc":
+        return execute_pc_command(cmd_value)
+    return "Comando no reconocido"
+
+
+def _is_ambiguous(command: str) -> str | None:
+    """Check if command is ambiguous (just 'apagar' or 'encender' alone).
+
+    Returns the ambiguous key if it matches, None otherwise.
+    """
+    # If the command has more specific words, it's not ambiguous
+    for keyword in sorted(_COMMANDS, key=len, reverse=True):
+        if keyword in command:
+            return None  # Found a specific match, not ambiguous
+
+    # Check if it's one of the ambiguous base words
+    for key in _AMBIGUOUS:
+        if key in command:
+            return key
+    return None
+
+
+def _resolve_followup(pending_action: str, answer: str) -> tuple[str, str] | None:
+    """Try to resolve a follow-up answer for an ambiguous command."""
+    answer = answer.lower().strip()
+    if pending_action not in _AMBIGUOUS:
+        return None
+    options = _AMBIGUOUS[pending_action]["options"]
+    for keyword in sorted(options, key=len, reverse=True):
+        if keyword in answer:
+            return options[keyword]
+    return None
+
+
+def _execute_command(command: str) -> tuple[str, SimpleCard | None, str | None]:
+    """Execute a command. Returns (speech, card, pending_action).
+
+    pending_action is set when the command is ambiguous and needs clarification.
+    """
     command = command.lower().strip()
     logger.info("Alexa command: '%s'", command)
 
     # Check for help command
     if command in ("ayuda", "help", "comandos", "lista", "commands"):
-        return _HELP_SPEECH, SimpleCard(title="Jarvis - Comandos", content=_HELP_CARD)
+        return _HELP_SPEECH, SimpleCard(title="Jarvis - Comandos", content=_HELP_CARD), None
+
+    # Check for ambiguous commands first
+    ambiguous_key = _is_ambiguous(command)
+    if ambiguous_key:
+        question = _AMBIGUOUS[ambiguous_key]["question"]
+        logger.info("Ambiguous command: '%s' -> asking for clarification", command)
+        return question, None, ambiguous_key
 
     # Sort by keyword length (longest first) for greedy matching
     for keyword in sorted(_COMMANDS, key=len, reverse=True):
         cmd_type, cmd_value = _COMMANDS[keyword]
         if keyword in command:
             logger.info("Matched: '%s' -> %s(%s)", keyword, cmd_type, cmd_value)
-            if cmd_type == "scene":
-                try:
-                    _run_async(_scene_manager.apply_scene(cmd_value))
-                    return f"{cmd_value} activado", None
-                except KeyError:
-                    return f"Escena {cmd_value} no encontrada", None
-            elif cmd_type == "music_mode":
-                _visualizer.set_mode(cmd_value)
-                _visualizer.start()
-                return f"{cmd_value} activado", None
-            elif cmd_type == "music_stop":
-                _visualizer.stop()
-                return "Listo", None
-            elif cmd_type == "power":
-                if cmd_value == "on":
-                    _run_async(_controller.turn_on())
-                    return "Listo", None
-                else:
-                    _run_async(_controller.turn_off())
-                    return "Listo", None
-            elif cmd_type == "pc":
-                result = execute_pc_command(cmd_value)
-                return result, None
+            result = _execute_action(cmd_type, cmd_value)
+            return result, None, None
 
     # Command not found -> suggest help
-    return (
-        f"No encontre '{command}'. Di 'ayuda' para ver los comandos.",
-        None,
-    )
+    return "No encontre ese comando. Di 'ayuda' para ver la lista.", None, None
 
 
 class LaunchHandler(AbstractRequestHandler):
@@ -198,6 +285,7 @@ class CommandHandler(AbstractRequestHandler):
         slots = handler_input.request_envelope.request.intent.slots
         command = slots.get("command")
         command_text = command.value if command and command.value else ""
+        session_attrs = handler_input.attributes_manager.session_attributes
 
         if not command_text:
             return (
@@ -207,10 +295,35 @@ class CommandHandler(AbstractRequestHandler):
                 .response
             )
 
-        speech, card = _execute_command(command_text)
+        # Check if we're in a follow-up conversation
+        pending = session_attrs.get("pending_action")
+        if pending:
+            session_attrs.pop("pending_action", None)
+            resolved = _resolve_followup(pending, command_text)
+            if resolved:
+                cmd_type, cmd_value = resolved
+                result = _execute_action(cmd_type, cmd_value)
+                return handler_input.response_builder.speak(result).response
+            else:
+                return (
+                    handler_input.response_builder
+                    .speak(f"No entendi. Di luces, P.C., o el nombre de una app.")
+                    .ask("Que quieres controlar?")
+                    .response
+                )
+
+        # Normal command processing
+        speech, card, pending_action = _execute_command(command_text)
         builder = handler_input.response_builder.speak(speech)
+
         if card:
             builder.set_card(card)
+
+        if pending_action:
+            # Ambiguous command -> keep session open for follow-up
+            session_attrs["pending_action"] = pending_action
+            builder.ask(speech)
+
         return builder.response
 
 
@@ -250,6 +363,19 @@ class FallbackHandler(AbstractRequestHandler):
         return is_intent_name("AMAZON.FallbackIntent")(handler_input)
 
     def handle(self, handler_input: HandlerInput) -> Response:
+        session_attrs = handler_input.attributes_manager.session_attributes
+
+        # If we're waiting for a follow-up, re-prompt
+        pending = session_attrs.get("pending_action")
+        if pending and pending in _AMBIGUOUS:
+            question = _AMBIGUOUS[pending]["question"]
+            return (
+                handler_input.response_builder
+                .speak(f"No entendi. {question}")
+                .ask(question)
+                .response
+            )
+
         return (
             handler_input.response_builder
             .speak("No entendi. Di 'ayuda' para ver los comandos.")
