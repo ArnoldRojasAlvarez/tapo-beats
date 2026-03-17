@@ -1,156 +1,199 @@
-# TapoBeats — Music-Reactive Smart Lighting with Alexa Voice Control
+<div align="center">
 
-Control TP-Link Tapo L530 smart bulbs with music playing on your PC. Real-time beat detection and frequency analysis drive color changes across multiple visualization modes. Trigger scenes and modes hands-free with Alexa or local voice commands.
+<img src="https://readme-typing-svg.demolabs.com?font=Fira+Code&weight=600&size=30&pause=1000&color=7AA2F7&center=true&vCenter=true&width=500&lines=TapoBeats+%F0%9F%92%A1%F0%9F%8E%B5;Music-Reactive+Smart+Lighting;Alexa+Voice+Control" alt="TapoBeats" />
+
+<br/>
+
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask&logoColor=white)
+![Alexa](https://img.shields.io/badge/Alexa-Skill-00CAFF?style=for-the-badge&logo=amazon-alexa&logoColor=white)
+![TP-Link](https://img.shields.io/badge/TP--Link-Tapo_L530-4ACBD6?style=for-the-badge&logo=tp-link&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+
+**Control your TP-Link Tapo smart bulbs with music in real-time.**
+Beat detection, frequency analysis, 7 scene presets, and hands-free Alexa voice control.
+
+[Features](#features) · [Setup](#setup) · [Voice Commands](#voice-commands) · [API](#ifttt-webhook-api)
+
+</div>
+
+---
 
 ## Features
 
-- **Music Sync** — Captures system audio (WASAPI loopback) and maps frequency/beat data to light colors in real-time
-- **7 Visualization Modes** — spectrum, energy, pulse, dual, complementary, chase, sync
-- **7 Scene Presets** — Chill, Party, Gaming, Movie, Sunset, Focus, Sex
-- **Alexa Skill ("Jarvis")** — Custom Alexa skill to trigger scenes and music modes by voice on Echo devices
-- **IFTTT Webhook** — Alternative voice control via IFTTT webhook integration
-- **Local Voice Control** — Offline speech recognition (Vosk) with dual-language support (English + Spanish)
-- **Web Dashboard** — Flask UI for manual control from any device on LAN
-- **Bulb Control** — Programmatic color, brightness, effects, on/off via python-kasa
+<table>
+  <tr>
+    <td width="50%">
+      <h3>🎵 Music Sync</h3>
+      <p>Captures system audio via WASAPI loopback and maps frequency/beat data to light colors in real-time. No mic needed — it listens to whatever is playing on your PC.</p>
+    </td>
+    <td width="50%">
+      <h3>🗣️ Alexa Skill ("Jarvis")</h3>
+      <p>Custom Alexa skill to trigger scenes and music modes by voice on any Echo device. Bilingual support (English + Spanish).</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>🎨 7 Visualization Modes</h3>
+      <p><code>spectrum</code> · <code>energy</code> · <code>pulse</code> · <code>dual</code> · <code>complementary</code> · <code>chase</code> · <code>sync</code></p>
+    </td>
+    <td width="50%">
+      <h3>🌐 Web Dashboard</h3>
+      <p>Flask-powered UI for manual control from any device on your LAN — phone, tablet, or PC.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>💡 7 Scene Presets</h3>
+      <p><code>Chill</code> · <code>Party</code> · <code>Gaming</code> · <code>Movie</code> · <code>Sunset</code> · <code>Focus</code> · <code>Sex</code></p>
+    </td>
+    <td width="50%">
+      <h3>🎙️ Offline Voice Control</h3>
+      <p>Local speech recognition via Vosk — works without internet, dual-language (EN/ES).</p>
+    </td>
+  </tr>
+</table>
+
+---
 
 ## Requirements
 
-- Python 3.11+
-- Windows 10/11 (WASAPI loopback for audio capture)
-- TP-Link Tapo L530 bulbs on the same local network
-- TP-Link cloud account (email + password)
-- (Optional) Amazon Echo device for Alexa skill integration
-- (Optional) [Ngrok](https://ngrok.com/) for exposing the local server to Alexa
+| Requirement | Details |
+|:-----------:|---------|
+| ![Python](https://img.shields.io/badge/-Python_3.11+-3776AB?style=flat-square&logo=python&logoColor=white) | Python 3.11 or newer |
+| ![Windows](https://img.shields.io/badge/-Windows_10%2F11-0078D6?style=flat-square&logo=windows&logoColor=white) | WASAPI loopback for audio capture |
+| ![TP-Link](https://img.shields.io/badge/-Tapo_L530-4ACBD6?style=flat-square&logo=tp-link&logoColor=white) | Bulbs on the same local network |
+| ![Alexa](https://img.shields.io/badge/-Echo_(optional)-00CAFF?style=flat-square&logo=amazon-alexa&logoColor=white) | For Alexa skill integration |
+| ![Ngrok](https://img.shields.io/badge/-Ngrok_(optional)-1F1E37?style=flat-square&logo=ngrok&logoColor=white) | To expose local server to Alexa |
+
+---
 
 ## Setup
 
-1. Clone the repo and create a virtual environment:
-   ```bash
-   git clone https://github.com/YOUR_USER/tapo-beats.git
-   cd tapo-beats
-   python -m venv venv
-   venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+```bash
+# 1. Clone and install
+git clone https://github.com/ArnoldRojasAlvarez/tapo-beats.git
+cd tapo-beats
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
 
-2. Copy `.env.example` to `.env` and fill in your TP-Link credentials:
-   ```bash
-   copy .env.example .env
-   ```
+# 2. Configure credentials
+copy .env.example .env
+# Edit .env with your TP-Link cloud email & password
 
-3. Start the server (web UI + all integrations):
-   ```bash
-   python -m src.main serve
-   ```
-   Open http://localhost:5000 in your browser.
+# 3. Launch
+python -m src.main serve
+# Open http://localhost:5000
+```
 
 ## CLI Commands
 
 | Command | Description |
 |---------|-------------|
+| `python -m src.main serve` | Start web UI + all integrations |
+| `python -m src.main music <mode>` | Start music mode (spectrum/energy/pulse/dual) |
 | `python -m src.main test-bulbs` | Discover bulbs, print state, cycle RGB |
 | `python -m src.main test-audio` | Capture 10s of system audio, print band energies |
-| `python -m src.main music <mode>` | Start music mode (spectrum/energy/pulse/dual) |
-| `python -m src.main serve` | Start Flask web UI on port 5000 |
+
+---
 
 ## Alexa Skill Setup ("Jarvis")
 
-The project includes a custom Alexa skill that lets you control lights with voice commands on any Echo device.
+> Custom Alexa skill — no third-party service fees, no cloud dependency beyond the initial handshake.
 
-### 1. Create the Alexa Skill
-
+### 1. Create the Skill
 1. Go to the [Alexa Developer Console](https://developer.amazon.com/alexa/console/ask)
-2. Create a new custom skill
-3. Set the invocation name to **Jarvis** (or your preferred name)
-4. Import the interaction model from `alexa_model.json` in the JSON Editor
-5. Build the model
+2. Create a new **custom** skill with invocation name **Jarvis**
+3. In the JSON Editor, import `alexa_model.json` from this repo
+4. Build the model
 
 ### 2. Configure the Endpoint
+1. Start ngrok: `ngrok http 5000`
+2. In the Alexa console, set the HTTPS endpoint to `https://YOUR_NGROK_URL/alexa`
+3. Your Echo device must use the **same Amazon account** as the developer console
 
-1. Install and authenticate [ngrok](https://ngrok.com/):
-   ```bash
-   ngrok http 5000
-   ```
-2. In the Alexa Developer Console, set the endpoint to:
-   ```
-   https://YOUR_NGROK_URL/alexa
-   ```
-   (Select HTTPS, "My development endpoint is a sub-domain of a domain that has a wildcard certificate")
+---
 
-3. Make sure your Echo device is logged into the **same Amazon account** as the developer console — dev skills auto-appear on devices with the same account.
+## Voice Commands
 
-### 3. Voice Commands
+Say *"Alexa, abre Jarvis"* followed by:
 
-Say: *"Alexa, abre Jarvis"* then any of these:
+| Category | Commands |
+|----------|----------|
+| **Scenes** | `party` · `chill` · `gaming` · `movie` · `sunset` · `focus` · `sex` |
+| **Music Modes** | `sync` · `spectrum` · `energy` · `pulse` · `chase` |
+| **Power** | `on` / `encender` · `off` / `apagar` |
+| **Stop** | `stop` / `para` / `detener` |
 
-| Command | Action |
-|---------|--------|
-| `party` / `fiesta` | Party scene |
-| `chill` / `relax` | Chill scene |
-| `gaming` / `juego` | Gaming scene |
-| `movie` / `pelicula` / `cine` | Movie scene |
-| `sunset` / `atardecer` | Sunset scene |
-| `focus` / `enfoque` | Focus scene |
-| `sex` / `romantico` | Sex scene |
-| `sync` / `spectrum` / `energy` / `pulse` | Music visualization modes |
-| `stop` / `para` / `detener` | Stop music |
-| `on` / `encender` | Turn lights on |
-| `off` / `apagar` | Turn lights off |
+> Supports both English and Spanish keywords.
 
-## IFTTT Webhook (Alternative)
+---
 
-Send a POST request to `/api/webhook/ifttt` with:
+## IFTTT Webhook API
+
+`POST /api/webhook/ifttt`
 
 ```json
+// Natural language
 {"action": "party"}
-```
 
-Or structured format:
-```json
+// Structured
 {"action": "scene:Party"}
 {"action": "music:start", "mode": "spectrum"}
 {"action": "power:on"}
+{"action": "power:off"}
 ```
+
+---
 
 ## Scenes
 
-| Scene | Description |
-|-------|-------------|
-| Chill | Warm amber, low brightness |
-| Party | Vibrant magenta + cyan, full brightness |
-| Gaming | Purple + teal |
-| Movie | Warm dim, cinema feel |
-| Sunset | Orange gradient |
-| Focus | Cool white 4000K |
-| Sex | Deep red + purple, very low brightness |
+| Scene | Bulb 1 | Bulb 2 | Vibe |
+|-------|--------|--------|------|
+| **Chill** | Warm amber, low | Warm amber, dim | Relaxation |
+| **Party** | Magenta, full | Cyan, full | High energy |
+| **Gaming** | Purple | Teal | Immersive |
+| **Movie** | Warm dim | Warm dim | Cinema |
+| **Sunset** | Deep orange | Golden | Warm atmosphere |
+| **Focus** | Cool white 4000K | Cool white 4000K | Productivity |
+| **Sex** | Deep red | Purple | Ambient mood |
+
+---
 
 ## Project Structure
 
 ```
 tapo-beats/
 ├── src/
-│   ├── main.py             # Entry point, CLI
-│   ├── config.py           # .env loading, settings
-│   ├── discovery.py        # Tapo device LAN discovery
-│   ├── bulb_controller.py  # python-kasa bulb wrapper
-│   ├── audio_capture.py    # WASAPI loopback capture
-│   ├── audio_analyzer.py   # FFT, beat detection, freq bands
-│   ├── visualizer.py       # Audio → light color mapping
-│   ├── scene_manager.py    # Scene presets
-│   ├── web_ui.py           # Flask web UI + API endpoints
-│   ├── alexa_skill.py      # Alexa Skill handlers
-│   └── voice_control.py    # Vosk offline voice recognition
+│   ├── main.py              # Entry point & CLI
+│   ├── config.py             # Environment config
+│   ├── discovery.py          # LAN device discovery
+│   ├── bulb_controller.py    # python-kasa wrapper
+│   ├── audio_capture.py      # WASAPI loopback
+│   ├── audio_analyzer.py     # FFT & beat detection
+│   ├── visualizer.py         # Audio → light mapping
+│   ├── scene_manager.py      # Scene presets
+│   ├── web_ui.py             # Flask dashboard + APIs
+│   ├── alexa_skill.py        # Alexa Skill handlers
+│   └── voice_control.py      # Vosk offline recognition
 ├── scenes/
 │   └── default_scenes.json
 ├── templates/
 │   └── index.html
 ├── static/
 │   └── style.css
-├── alexa_model.json        # Alexa interaction model (import to dev console)
+├── alexa_model.json           # Alexa interaction model
 ├── requirements.txt
 └── .env.example
 ```
 
-## License
+---
 
-MIT
+<div align="center">
+
+**Built with** ![Python](https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white) ![Flask](https://img.shields.io/badge/-Flask-000?style=flat-square&logo=flask&logoColor=white) ![Alexa](https://img.shields.io/badge/-Alexa_Skills_Kit-00CAFF?style=flat-square&logo=amazon-alexa&logoColor=white) ![Kasa](https://img.shields.io/badge/-python--kasa-4ACBD6?style=flat-square)
+
+MIT License
+
+</div>
