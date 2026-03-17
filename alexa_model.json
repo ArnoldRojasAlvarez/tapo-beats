@@ -48,6 +48,7 @@
         {
           "name": "COMMAND_LIST",
           "values": [
+            {"name": {"value": "ayuda", "synonyms": ["help", "comandos", "lista", "commands", "lista de comandos"]}},
             {"name": {"value": "party", "synonyms": ["fiesta", "party mode"]}},
             {"name": {"value": "chill", "synonyms": ["chill mode", "relax"]}},
             {"name": {"value": "gaming", "synonyms": ["gaming mode", "juego"]}},

@@ -120,3 +120,62 @@ h2 {
     max-height: 60px;
     overflow-y: auto;
 }
+
+/* Commands Reference Card */
+.commands-card { border: 1px solid #1e3a5f; }
+
+.commands-subtitle {
+    font-size: 0.85rem;
+    color: #7a8ba0;
+    margin-bottom: 16px;
+    font-style: italic;
+}
+
+.commands-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+.cmd-category h3 {
+    font-size: 0.8rem;
+    color: #6b7fa3;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #1e2d4a;
+}
+
+.cmd-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.cmd-tag {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+.tag-scene  { background: #2d1b4e; color: #c084fc; }
+.tag-music  { background: #1b3a4e; color: #67e8f9; }
+.tag-power  { background: #1b4e2d; color: #6fdc6f; }
+.tag-pc     { background: #4e3a1b; color: #fbbf24; }
+.tag-vol    { background: #1b2e4e; color: #60a5fa; }
+.tag-app    { background: #4e1b2d; color: #fb7185; }
+
+.commands-tip {
+    font-size: 0.75rem;
+    color: #556677;
+    margin-top: 14px;
+    text-align: center;
+}
+
+@media (max-width: 500px) {
+    .commands-grid { grid-template-columns: 1fr; }
+}

@@ -8,6 +8,7 @@ from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_model import Response
+from ask_sdk_model.ui import SimpleCard
 
 from .pc_control import execute_pc_command
 
@@ -81,6 +82,45 @@ _COMMANDS = {
     "youtube": ("pc", "youtube"),
 }
 
+# Help card content organized by category
+_HELP_CARD = (
+    "━━━ JARVIS - Comandos ━━━\n"
+    "\n"
+    "🎨 ESCENAS\n"
+    "  party · chill · gaming\n"
+    "  movie · sunset · focus · sex\n"
+    "\n"
+    "🎵 MUSICA\n"
+    "  sync · spectrum · energy\n"
+    "  pulse · dual · chase · stop\n"
+    "\n"
+    "💡 LUCES\n"
+    "  encender · apagar\n"
+    "\n"
+    "🖥️ PC\n"
+    "  apagar pc · reiniciar\n"
+    "  suspender · bloquear\n"
+    "  cancelar apagado\n"
+    "\n"
+    "🔊 VOLUMEN\n"
+    "  subir volumen · bajar volumen\n"
+    "  mutear\n"
+    "\n"
+    "📱 APPS\n"
+    "  spotify · youtube · steam\n"
+    "  crunchyroll · whatsapp\n"
+    "  outlook · wallpaper\n"
+    "\n"
+    "💬 Di 'ayuda' para ver esto de nuevo"
+)
+
+_HELP_SPEECH = (
+    "Te envie la lista de comandos a la app de Alexa. "
+    "Tienes escenas, musica, control de luces, P.C. y apps."
+)
+
+_HELP_SHORT_SPEECH = "Revisa la app de Alexa para ver todos los comandos."
+
 
 def _run_async(coro):
     """Run async coroutine from sync context."""
@@ -88,10 +128,14 @@ def _run_async(coro):
     return future.result(timeout=10)
 
 
-def _execute_command(command: str) -> str:
-    """Execute a command and return a speech response."""
+def _execute_command(command: str) -> tuple[str, SimpleCard | None]:
+    """Execute a command and return (speech, card) tuple."""
     command = command.lower().strip()
     logger.info("Alexa command: '%s'", command)
+
+    # Check for help command
+    if command in ("ayuda", "help", "comandos", "lista", "commands"):
+        return _HELP_SPEECH, SimpleCard(title="Jarvis - Comandos", content=_HELP_CARD)
 
     # Sort by keyword length (longest first) for greedy matching
     for keyword in sorted(_COMMANDS, key=len, reverse=True):
@@ -101,47 +145,51 @@ def _execute_command(command: str) -> str:
             if cmd_type == "scene":
                 try:
                     _run_async(_scene_manager.apply_scene(cmd_value))
-                    return f"Escena {cmd_value} activada"
+                    return f"{cmd_value} activado", None
                 except KeyError:
-                    return f"No encontre la escena {cmd_value}"
+                    return f"Escena {cmd_value} no encontrada", None
             elif cmd_type == "music_mode":
                 _visualizer.set_mode(cmd_value)
                 _visualizer.start()
-                return f"Modo {cmd_value} activado"
+                return f"{cmd_value} activado", None
             elif cmd_type == "music_stop":
                 _visualizer.stop()
-                return "Musica detenida"
+                return "Listo", None
             elif cmd_type == "power":
                 if cmd_value == "on":
                     _run_async(_controller.turn_on())
-                    return "Luces encendidas"
+                    return "Listo", None
                 else:
                     _run_async(_controller.turn_off())
-                    return "Luces apagadas"
+                    return "Listo", None
             elif cmd_type == "pc":
-                return execute_pc_command(cmd_value)
+                result = execute_pc_command(cmd_value)
+                return result, None
 
-    return f"No entendi el comando: {command}"
+    # Command not found -> suggest help
+    return (
+        f"No encontre '{command}'. Di 'ayuda' para ver los comandos.",
+        None,
+    )
 
 
 class LaunchHandler(AbstractRequestHandler):
-    """Handle skill launch: 'Alexa, abre eco'."""
+    """Handle skill launch: 'Alexa, abre Jarvis'."""
 
     def can_handle(self, handler_input: HandlerInput) -> bool:
         return is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input: HandlerInput) -> Response:
-        speech = "Listo. Dime un comando como party, spotify, apagar pc, o sync."
         return (
             handler_input.response_builder
-            .speak(speech)
-            .ask("Dime un comando")
+            .speak("Dime un comando.")
+            .ask("Dime un comando.")
             .response
         )
 
 
 class CommandHandler(AbstractRequestHandler):
-    """Handle the CommandIntent: 'dile a eco {command}'."""
+    """Handle the CommandIntent: 'dile a Jarvis {command}'."""
 
     def can_handle(self, handler_input: HandlerInput) -> bool:
         return is_intent_name("CommandIntent")(handler_input)
@@ -154,13 +202,16 @@ class CommandHandler(AbstractRequestHandler):
         if not command_text:
             return (
                 handler_input.response_builder
-                .speak("No escuche el comando. Intenta de nuevo.")
-                .ask("Dime un comando")
+                .speak("No escuche. Di 'ayuda' para ver los comandos.")
+                .ask("Dime un comando.")
                 .response
             )
 
-        result = _execute_command(command_text)
-        return handler_input.response_builder.speak(result).response
+        speech, card = _execute_command(command_text)
+        builder = handler_input.response_builder.speak(speech)
+        if card:
+            builder.set_card(card)
+        return builder.response
 
 
 class HelpHandler(AbstractRequestHandler):
@@ -170,17 +221,11 @@ class HelpHandler(AbstractRequestHandler):
         return is_intent_name("AMAZON.HelpIntent")(handler_input)
 
     def handle(self, handler_input: HandlerInput) -> Response:
-        speech = (
-            "Puedes decir: party, gaming, chill, movie, sunset, focus, sex, "
-            "sync, spectrum, energy, pulse, chase, stop, encender, apagar, "
-            "spotify, youtube, whatsapp, steam, crunchyroll, outlook, "
-            "apagar pc, reiniciar, suspender, bloquear, mutear, "
-            "subir volumen, o bajar volumen."
-        )
         return (
             handler_input.response_builder
-            .speak(speech)
-            .ask("Dime un comando")
+            .speak(_HELP_SPEECH)
+            .set_card(SimpleCard(title="Jarvis - Comandos", content=_HELP_CARD))
+            .ask("Dime un comando.")
             .response
         )
 
@@ -195,7 +240,7 @@ class StopHandler(AbstractRequestHandler):
         )
 
     def handle(self, handler_input: HandlerInput) -> Response:
-        return handler_input.response_builder.speak("Hasta luego").response
+        return handler_input.response_builder.speak("Chao").response
 
 
 class FallbackHandler(AbstractRequestHandler):
@@ -207,8 +252,8 @@ class FallbackHandler(AbstractRequestHandler):
     def handle(self, handler_input: HandlerInput) -> Response:
         return (
             handler_input.response_builder
-            .speak("No entendi. Di un comando como party, sync o apagar.")
-            .ask("Dime un comando")
+            .speak("No entendi. Di 'ayuda' para ver los comandos.")
+            .ask("Dime un comando.")
             .response
         )
 
