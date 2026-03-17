@@ -1,0 +1,69 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "Jarvis",
+      "intents": [
+        {
+          "name": "CommandIntent",
+          "slots": [
+            {
+              "name": "command",
+              "type": "COMMAND_LIST"
+            }
+          ],
+          "samples": [
+            "{command}",
+            "pon {command}",
+            "activa {command}",
+            "modo {command}",
+            "escena {command}",
+            "cambia a {command}",
+            "ponme {command}",
+            "luces {command}"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        }
+      ],
+      "types": [
+        {
+          "name": "COMMAND_LIST",
+          "values": [
+            {"name": {"value": "party", "synonyms": ["fiesta", "party mode"]}},
+            {"name": {"value": "chill", "synonyms": ["chill mode", "relax"]}},
+            {"name": {"value": "gaming", "synonyms": ["gaming mode", "juego"]}},
+            {"name": {"value": "movie", "synonyms": ["pelicula", "movie mode", "cine"]}},
+            {"name": {"value": "sunset", "synonyms": ["atardecer"]}},
+            {"name": {"value": "focus", "synonyms": ["enfoque", "concentracion"]}},
+            {"name": {"value": "sex", "synonyms": ["sexy", "romantico"]}},
+            {"name": {"value": "spectrum", "synonyms": ["spectrum mode"]}},
+            {"name": {"value": "energy", "synonyms": ["energy mode", "energia"]}},
+            {"name": {"value": "pulse", "synonyms": ["pulse mode", "pulso"]}},
+            {"name": {"value": "dual", "synonyms": ["dual mode"]}},
+            {"name": {"value": "complementary", "synonyms": ["complementary mode"]}},
+            {"name": {"value": "chase", "synonyms": ["chase mode"]}},
+            {"name": {"value": "sync", "synonyms": ["sync mode", "sincronizar"]}},
+            {"name": {"value": "music", "synonyms": ["musica", "start music"]}},
+            {"name": {"value": "stop", "synonyms": ["para", "parar", "detener"]}},
+            {"name": {"value": "on", "synonyms": ["encender", "prender"]}},
+            {"name": {"value": "off", "synonyms": ["apagar"]}}
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapoBeats</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>TapoBeats</h1>
+
+        <!-- Connected Bulbs -->
+        <section class="card">
+            <h2>Bulbs</h2>
+            {% for bulb in bulbs %}
+            <div class="bulb-row">
+                <div class="bulb-preview" style="background: hsl({{ bulb.hue }}, {{ bulb.saturation }}%, {{ bulb.brightness // 2 + 25 }}%);"></div>
+                <div class="bulb-info">
+                    <strong>{{ bulb.alias }}</strong> ({{ bulb.ip }})
+                    <span class="status {{ 'on' if bulb.is_on else 'off' }}">{{ 'ON' if bulb.is_on else 'OFF' }}</span>
+                </div>
+                <div class="bulb-controls">
+                    <label>Hue <input type="range" min="0" max="360" value="{{ bulb.hue }}" class="hue-slider" data-index="{{ loop.index0 }}"></label>
+                    <label>Brightness <input type="range" min="1" max="100" value="{{ bulb.brightness }}" class="bri-slider" data-index="{{ loop.index0 }}"></label>
+                    <button class="btn power-btn" data-index="{{ loop.index0 }}">Toggle</button>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+
+        <!-- Scenes -->
+        <section class="card">
+            <h2>Scenes</h2>
+            <div class="scene-grid">
+                {% for scene in scenes %}
+                <button class="btn scene-btn" data-scene="{{ scene }}">{{ scene }}</button>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Music Mode -->
+        <section class="card">
+            <h2>Music Mode</h2>
+            <div class="music-controls">
+                <select id="music-mode">
+                    <option value="spectrum">Spectrum</option>
+                    <option value="energy">Energy</option>
+                    <option value="pulse">Pulse</option>
+                    <option value="dual">Dual</option>
+                    <option value="complementary">Complementary</option>
+                    <option value="chase">Chase</option>
+                    <option value="sync">Sync</option>
+                </select>
+                <button class="btn" id="music-start">Start</button>
+                <button class="btn btn-stop" id="music-stop">Stop</button>
+            </div>
+        </section>
+
+        <!-- Voice Control -->
+        <section class="card">
+            <h2>Voice Control</h2>
+            <p class="voice-hint">Commands: scene names (party, chill, gaming...), music modes (sync, spectrum, energy...), stop, turn on/off</p>
+            <div class="voice-controls">
+                <button class="btn" id="voice-toggle">Enable Voice</button>
+                <span id="voice-status" class="status off">OFF</span>
+            </div>
+            <div id="voice-log" class="voice-log"></div>
+        </section>
+
+        <!-- Master Controls -->
+        <section class="card">
+            <h2>Master</h2>
+            <button class="btn" id="all-on">All On</button>
+            <button class="btn btn-stop" id="all-off">All Off</button>
+        </section>
+    </div>
+
+    <script>
+        function api(url, data) {
+            return fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data),
+            });
+        }
+
+        // Color sliders
+        document.querySelectorAll('.hue-slider, .bri-slider').forEach(slider => {
+            slider.addEventListener('change', () => {
+                const idx = parseInt(slider.dataset.index);
+                const row = slider.closest('.bulb-row');
+                const hue = parseInt(row.querySelector('.hue-slider').value);
+                const bri = parseInt(row.querySelector('.bri-slider').value);
+                api('/api/color', {hue, saturation: 100, brightness: bri, bulb_index: idx});
+            });
+        });
+
+        // Power toggle
+        document.querySelectorAll('.power-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                api('/api/power', {action: 'toggle', bulb_index: parseInt(btn.dataset.index)});
+            });
+        });
+
+        // Scenes
+        document.querySelectorAll('.scene-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                api('/api/scene', {scene: btn.dataset.scene});
+            });
+        });
+
+        // Music controls
+        document.getElementById('music-start').addEventListener('click', () => {
+            api('/api/music/start', {mode: document.getElementById('music-mode').value});
+        });
+        document.getElementById('music-stop').addEventListener('click', () => {
+            api('/api/music/stop', {});
+        });
+
+        // Master controls
+        document.getElementById('all-on').addEventListener('click', () => api('/api/power', {action: 'on'}));
+        document.getElementById('all-off').addEventListener('click', () => api('/api/power', {action: 'off'}));
+
+        // Voice control
+        const voiceBtn = document.getElementById('voice-toggle');
+        const voiceStatus = document.getElementById('voice-status');
+        let voiceActive = false;
+
+        async function updateVoiceStatus() {
+            const res = await fetch('/api/voice/status');
+            const data = await res.json();
+            voiceActive = data.listening;
+            voiceStatus.textContent = voiceActive ? 'LISTENING' : 'OFF';
+            voiceStatus.className = 'status ' + (voiceActive ? 'on' : 'off');
+            voiceBtn.textContent = voiceActive ? 'Disable Voice' : 'Enable Voice';
+        }
+
+        voiceBtn.addEventListener('click', async () => {
+            if (voiceActive) {
+                await api('/api/voice/stop', {});
+            } else {
+                await api('/api/voice/start', {});
+            }
+            setTimeout(updateVoiceStatus, 500);
+        });
+
+        updateVoiceStatus();
+    </script>
+</body>
+</html>

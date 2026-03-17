@@ -1,0 +1,51 @@
+{
+  "Chill": {
+    "bulbs": [
+      {"hue": 30, "saturation": 80, "brightness": 30},
+      {"hue": 35, "saturation": 75, "brightness": 25}
+    ],
+    "transition_ms": 1000
+  },
+  "Party": {
+    "bulbs": [
+      {"hue": 300, "saturation": 100, "brightness": 100},
+      {"hue": 180, "saturation": 100, "brightness": 100}
+    ],
+    "transition_ms": 200
+  },
+  "Gaming": {
+    "bulbs": [
+      {"hue": 270, "saturation": 90, "brightness": 70},
+      {"hue": 175, "saturation": 85, "brightness": 65}
+    ],
+    "transition_ms": 500
+  },
+  "Movie": {
+    "bulbs": [
+      {"hue": 30, "saturation": 60, "brightness": 15},
+      {"hue": 25, "saturation": 55, "brightness": 12}
+    ],
+    "transition_ms": 1500
+  },
+  "Sunset": {
+    "bulbs": [
+      {"hue": 15, "saturation": 95, "brightness": 60},
+      {"hue": 35, "saturation": 90, "brightness": 50}
+    ],
+    "transition_ms": 800
+  },
+  "Focus": {
+    "bulbs": [
+      {"color_temp": 4000, "brightness": 80},
+      {"color_temp": 4000, "brightness": 80}
+    ],
+    "transition_ms": 500
+  },
+  "Sex": {
+    "bulbs": [
+      {"hue": 350, "saturation": 90, "brightness": 12},
+      {"hue": 280, "saturation": 80, "brightness": 8}
+    ],
+    "transition_ms": 2000
+  }
+}

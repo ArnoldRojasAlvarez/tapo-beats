@@ -1,0 +1,122 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 24px;
+    background: linear-gradient(90deg, #ff6b6b, #ffa500, #48dbfb, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+h2 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.card {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.bulb-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid #1a1a3e;
+}
+.bulb-row:last-child { border-bottom: none; }
+
+.bulb-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    flex-shrink: 0;
+}
+
+.bulb-info { flex: 1; }
+.bulb-info .status { margin-left: 8px; font-size: 0.8rem; padding: 2px 8px; border-radius: 10px; }
+.status.on { background: #2d6a2d; color: #6fdc6f; }
+.status.off { background: #6a2d2d; color: #dc6f6f; }
+
+.bulb-controls { display: flex; flex-direction: column; gap: 6px; }
+.bulb-controls label { font-size: 0.8rem; display: flex; align-items: center; gap: 8px; }
+.bulb-controls input[type="range"] { width: 120px; }
+
+.btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #0f3460;
+    color: #e0e0e0;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+.btn:hover { background: #1a5276; }
+.btn-stop { background: #6a2d2d; }
+.btn-stop:hover { background: #8b3a3a; }
+
+.scene-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.scene-btn { flex: 1 1 auto; min-width: 90px; text-align: center; }
+
+.music-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.music-controls select {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: #0a0f24;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+}
+
+#all-on, #all-off { margin-right: 10px; }
+
+.voice-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.voice-hint {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.voice-log {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #6fdc6f;
+    max-height: 60px;
+    overflow-y: auto;
+}

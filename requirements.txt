@@ -1,0 +1,9 @@
+python-kasa>=0.7.0
+python-dotenv>=1.0.0
+numpy>=1.24.0
+sounddevice>=0.4.6
+Flask>=3.0.0
+ask-sdk-core>=1.19.0
+ask-sdk-webservice-support>=1.4.0
+vosk>=0.3.45
+pyaudio>=0.2.14
