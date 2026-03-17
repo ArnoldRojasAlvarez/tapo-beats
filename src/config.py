@@ -40,3 +40,13 @@ def get_flask_port() -> int:
 def get_flask_debug() -> bool:
     """Return whether Flask debug mode is enabled."""
     return os.getenv("FLASK_DEBUG", "false").lower() in ("true", "1", "yes")
+
+
+def get_api_key() -> str | None:
+    """Return the API key for webhook authentication."""
+    return os.getenv("API_KEY")
+
+
+def get_ngrok_domain() -> str | None:
+    """Return the ngrok static domain."""
+    return os.getenv("NGROK_DOMAIN")

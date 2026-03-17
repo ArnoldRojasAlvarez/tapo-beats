@@ -4,6 +4,17 @@
 
 cd /d "%~dp0"
 
+:: Load ngrok domain from .env
+for /f "tokens=1,2 delims==" %%a in (.env) do (
+    if "%%a"=="NGROK_DOMAIN" set NGROK_DOMAIN=%%b
+)
+
+if "%NGROK_DOMAIN%"=="" (
+    echo ERROR: NGROK_DOMAIN not set in .env
+    pause
+    exit /b 1
+)
+
 :: Activate virtual environment
 call venv\Scripts\activate.bat
 
@@ -13,8 +24,8 @@ start /B python -m src.main serve
 :: Wait for Flask to be ready
 timeout /t 3 /nobreak >nul
 
-:: Start ngrok with static domain (URL never changes)
-start /B ngrok http 5000 --domain YOUR_NGROK_DOMAIN_HERE
+:: Start ngrok with static domain from .env
+start /B ngrok http 5000 --domain %NGROK_DOMAIN%
 
 echo TapoBeats is running!
 echo Flask: http://localhost:5000

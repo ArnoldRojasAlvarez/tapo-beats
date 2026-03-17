@@ -16,9 +16,24 @@ from .visualizer import MusicVisualizer
 from .voice_control import VoiceControl
 from .alexa_skill import skill, init_alexa_skill
 from .pc_control import execute_pc_command
-from .config import get_flask_port, get_flask_debug
+from .config import get_flask_port, get_flask_debug, get_api_key
+
+from functools import wraps
 
 logger = logging.getLogger(__name__)
+
+
+def _require_api_key(f):
+    """Decorator that requires a valid API key for external endpoints."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        api_key = get_api_key()
+        if api_key:
+            provided = request.headers.get("X-API-Key") or request.args.get("api_key")
+            if provided != api_key:
+                return jsonify({"error": "Unauthorized"}), 401
+        return f(*args, **kwargs)
+    return decorated
 
 _project_root = Path(__file__).resolve().parent.parent
 
@@ -177,6 +192,7 @@ _ALEXA_COMMANDS = {
 
 
 @app.route("/api/webhook/ifttt", methods=["POST"])
+@_require_api_key
 def api_ifttt_webhook():
     """IFTTT webhook endpoint for Alexa integration.
 
@@ -337,7 +353,7 @@ def create_app(
     # Init Alexa skill
     init_alexa_skill(controller, scene_manager, visualizer, loop)
     _alexa_handler = WebserviceSkillHandler(
-        skill=skill, verify_signature=False, verify_timestamp=False
+        skill=skill, verify_signature=True, verify_timestamp=True
     )
     return app
 
