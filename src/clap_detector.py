@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 # Detection parameters
 _SAMPLE_RATE = 44100
 _BLOCK_SIZE = 1024
-_CLAP_THRESHOLD = 0.35      # amplitude threshold for a clap
+_CLAP_THRESHOLD = 0.06      # amplitude threshold for a clap (very sensitive)
 _CLAP_MIN_GAP = 0.1         # min seconds between two claps
-_CLAP_MAX_GAP = 0.5         # max seconds between two claps
+_CLAP_MAX_GAP = 0.6         # max seconds between two claps
 _COOLDOWN = 1.5             # seconds to wait after triggering
 
 
@@ -57,10 +57,23 @@ class ClapDetector:
             self._thread = None
         logger.info("Clap detector stopped")
 
+    def _find_mic(self) -> int | None:
+        """Find the best physical microphone (prefer Razer BlackShark)."""
+        devs = sd.query_devices()
+        for i, d in enumerate(devs):
+            if d['max_input_channels'] > 0 and 'blackshark' in d['name'].lower():
+                logger.info("Clap detector using: [%d] %s", i, d['name'])
+                return i
+        # Fallback to default
+        logger.info("Clap detector using default input device")
+        return None
+
     def _listen(self) -> None:
         """Audio capture loop."""
         try:
+            device = self._find_mic()
             self._stream = sd.InputStream(
+                device=device,
                 samplerate=_SAMPLE_RATE,
                 blocksize=_BLOCK_SIZE,
                 channels=1,
@@ -86,6 +99,9 @@ class ClapDetector:
             return
 
         amplitude = np.abs(indata).max()
+
+        if amplitude > _CLAP_THRESHOLD * 0.5:
+            logger.debug("Audio amplitude: %.3f (threshold: %.3f)", amplitude, _CLAP_THRESHOLD)
 
         if amplitude > _CLAP_THRESHOLD:
             now = time.monotonic()

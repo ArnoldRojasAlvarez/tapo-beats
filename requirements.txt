@@ -9,3 +9,4 @@ vosk>=0.3.45
 pyaudio>=0.2.14
 mss>=9.0.0
 Pillow>=10.0.0
+winsdk>=1.0.0b10
