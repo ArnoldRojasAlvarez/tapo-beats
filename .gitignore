@@ -13,3 +13,5 @@ ngrok.exe
 *.ngrok*
 tapo-beats-prompt.md
 .tapobeats.lock
+frontend/node_modules/
+frontend/dist/

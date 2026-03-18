@@ -5,7 +5,7 @@ import logging
 import threading
 from pathlib import Path
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 
 from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_webservice_support.webservice_handler import WebserviceSkillHandler
@@ -36,12 +36,20 @@ def _require_api_key(f):
     return decorated
 
 _project_root = Path(__file__).resolve().parent.parent
+_frontend_dist = _project_root / "frontend" / "dist"
 
-app = Flask(
-    __name__,
-    template_folder=str(_project_root / "templates"),
-    static_folder=str(_project_root / "static"),
-)
+if _frontend_dist.exists():
+    app = Flask(
+        __name__,
+        static_folder=str(_frontend_dist),
+        static_url_path="",
+    )
+else:
+    app = Flask(
+        __name__,
+        template_folder=str(_project_root / "templates"),
+        static_folder=str(_project_root / "static"),
+    )
 
 # These will be set by create_app()
 _controller: BulbController | None = None
@@ -62,9 +70,46 @@ def _run_async(coro):
 @app.route("/")
 def index():
     """Render the main dashboard."""
+    if _frontend_dist.exists():
+        return send_from_directory(str(_frontend_dist), "index.html")
     states = _run_async(_controller.get_state())
     scenes = _scene_manager.list_scenes()
     return render_template("index.html", bulbs=states, scenes=scenes)
+
+
+@app.route("/api/state", methods=["GET"])
+def api_state():
+    """Return complete application state for React frontend."""
+    states = _run_async(_controller.get_state())
+    bulbs = []
+    for s in states:
+        bulbs.append({
+            "alias": s.alias,
+            "ip": s.ip,
+            "is_on": s.is_on,
+            "hue": s.hue,
+            "saturation": s.saturation,
+            "brightness": s.brightness,
+        })
+    scenes = _scene_manager.list_scenes()
+    music_active = _visualizer._running if _visualizer else False
+    music_mode = _visualizer.mode if _visualizer and music_active else None
+    voice_listening = _voice is not None and _voice._running
+    return jsonify({
+        "bulbs": bulbs,
+        "scenes": scenes,
+        "music": {"active": music_active, "mode": music_mode},
+        "voice": {"listening": voice_listening},
+    })
+
+
+@app.route("/api/pc", methods=["POST"])
+def api_pc():
+    """Execute a PC control command."""
+    data = request.get_json()
+    action = data.get("action", "")
+    result = execute_pc_command(action)
+    return jsonify({"status": "ok", "message": result})
 
 
 @app.route("/api/color", methods=["POST"])
