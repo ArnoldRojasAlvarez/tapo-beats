@@ -9,7 +9,7 @@ import CommandsCard from './components/CommandsCard';
 import MasterControls from './components/MasterControls';
 
 export default function App() {
-  const { state, error, refresh } = useAppState(2000);
+  const { state, error, refresh, useMock } = useAppState(2000);
 
   if (!state && !error) {
     return (
@@ -31,7 +31,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header connected={!error} />
+      <Header connected={!error && !useMock} />
       <main className="dashboard">
         <MasterControls onAction={refresh} />
         <BulbsPanel bulbs={state.bulbs} onAction={refresh} />
