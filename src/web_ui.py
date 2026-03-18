@@ -16,6 +16,10 @@ from .visualizer import MusicVisualizer
 from .voice_control import VoiceControl
 from .alexa_skill import skill, init_alexa_skill
 from .pc_control import execute_pc_command
+from .ambilight import Ambilight
+from .clap_detector import ClapDetector
+from .routines import RoutineManager
+from .notify_lights import NotifyLights
 from .config import get_flask_port, get_flask_debug, get_api_key
 
 from functools import wraps
@@ -56,6 +60,10 @@ _controller: BulbController | None = None
 _scene_manager: SceneManager | None = None
 _visualizer: MusicVisualizer | None = None
 _voice: VoiceControl | None = None
+_ambilight: Ambilight | None = None
+_clap: ClapDetector | None = None
+_routines: RoutineManager | None = None
+_notify: NotifyLights | None = None
 _loop: asyncio.AbstractEventLoop | None = None
 
 
@@ -95,11 +103,20 @@ def api_state():
     music_active = _visualizer._running if _visualizer else False
     music_mode = _visualizer.mode if _visualizer and music_active else None
     voice_listening = _voice is not None and _voice._running
+    ambilight_running = _ambilight.running if _ambilight else False
+    ambilight_zones = _ambilight.zones if _ambilight else "split"
+    clap_running = _clap.running if _clap else False
+    routine_active = _routines.active if _routines else None
+    notify_running = _notify.running if _notify else False
     return jsonify({
         "bulbs": bulbs,
         "scenes": scenes,
         "music": {"active": music_active, "mode": music_mode},
         "voice": {"listening": voice_listening},
+        "ambilight": {"running": ambilight_running, "zones": ambilight_zones},
+        "clap": {"running": clap_running},
+        "routine": {"active": routine_active},
+        "notify": {"running": notify_running},
     })
 
 
@@ -353,6 +370,87 @@ def api_voice_status():
     return jsonify({"status": "ok", "listening": running})
 
 
+@app.route("/api/ambilight/start", methods=["POST"])
+def api_ambilight_start():
+    """Start ambilight screen sync."""
+    data = request.get_json() or {}
+    zones = data.get("zones", "split")
+    _ambilight.set_zones(zones)
+    _visualizer.stop()  # stop music if running
+    _ambilight.start()
+    return jsonify({"status": "ok", "running": True, "zones": zones})
+
+
+@app.route("/api/ambilight/stop", methods=["POST"])
+def api_ambilight_stop():
+    """Stop ambilight."""
+    _ambilight.stop()
+    return jsonify({"status": "ok", "running": False})
+
+
+@app.route("/api/clap/start", methods=["POST"])
+def api_clap_start():
+    """Start clap detection."""
+    _clap.start()
+    return jsonify({"status": "ok", "running": True})
+
+
+@app.route("/api/clap/stop", methods=["POST"])
+def api_clap_stop():
+    """Stop clap detection."""
+    _clap.stop()
+    return jsonify({"status": "ok", "running": False})
+
+
+@app.route("/api/routine/sleep", methods=["POST"])
+def api_routine_sleep():
+    """Start sleep routine."""
+    data = request.get_json() or {}
+    duration = int(data.get("duration", 15))
+    suspend = data.get("suspend_pc", True)
+    result = _routines.sleep_routine(duration, suspend)
+    return jsonify({"status": "ok", "message": result})
+
+
+@app.route("/api/routine/wake", methods=["POST"])
+def api_routine_wake():
+    """Start wake routine."""
+    data = request.get_json() or {}
+    duration = int(data.get("duration", 5))
+    result = _routines.wake_routine(duration)
+    return jsonify({"status": "ok", "message": result})
+
+
+@app.route("/api/routine/cancel", methods=["POST"])
+def api_routine_cancel():
+    """Cancel active routine."""
+    result = _routines.cancel()
+    return jsonify({"status": "ok", "message": result})
+
+
+@app.route("/api/notify/start", methods=["POST"])
+def api_notify_start():
+    """Start notification lights."""
+    _notify.start()
+    return jsonify({"status": "ok", "running": True})
+
+
+@app.route("/api/notify/stop", methods=["POST"])
+def api_notify_stop():
+    """Stop notification lights."""
+    _notify.stop()
+    return jsonify({"status": "ok", "running": False})
+
+
+@app.route("/api/notify/flash", methods=["POST"])
+def api_notify_flash():
+    """Trigger a notification flash."""
+    data = request.get_json() or {}
+    app_name = data.get("app", "default")
+    _notify.flash(app_name)
+    return jsonify({"status": "ok", "app": app_name})
+
+
 def _handle_voice_action(action_type: str, action_value: str | None) -> None:
     """Handle a voice command by dispatching to the appropriate controller."""
     try:
@@ -390,11 +488,27 @@ def create_app(
 ) -> Flask:
     """Initialize the Flask app with shared components."""
     global _controller, _scene_manager, _visualizer, _voice, _loop, _alexa_handler
+    global _ambilight, _clap, _routines, _notify
     _controller = controller
     _scene_manager = scene_manager
     _visualizer = visualizer
     _loop = loop
     _voice = VoiceControl(action_callback=_handle_voice_action)
+    _ambilight = Ambilight(controller, loop)
+    _routines = RoutineManager(controller, loop)
+    _notify = NotifyLights(controller, loop)
+
+    def _clap_toggle():
+        """Toggle lights on double clap."""
+        states = asyncio.run_coroutine_threadsafe(
+            controller.get_state(), loop
+        ).result(timeout=5)
+        if states and states[0].is_on:
+            asyncio.run_coroutine_threadsafe(controller.turn_off(), loop)
+        else:
+            asyncio.run_coroutine_threadsafe(controller.turn_on(), loop)
+
+    _clap = ClapDetector(callback=_clap_toggle)
     # Init Alexa skill
     init_alexa_skill(controller, scene_manager, visualizer, loop)
     _alexa_handler = WebserviceSkillHandler(

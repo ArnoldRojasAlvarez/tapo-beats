@@ -7,6 +7,7 @@ import PcControlPanel from './components/PcControlPanel';
 import VoicePanel from './components/VoicePanel';
 import CommandsCard from './components/CommandsCard';
 import MasterControls from './components/MasterControls';
+import FeaturesPanel from './components/FeaturesPanel';
 
 export default function App() {
   const { state, error, refresh, useMock } = useAppState(2000);
@@ -38,6 +39,13 @@ export default function App() {
         <ScenesPanel scenes={state.scenes} onAction={refresh} />
         <MusicPanel music={state.music} onAction={refresh} />
         <PcControlPanel onAction={refresh} />
+        <FeaturesPanel
+          ambilight={state.ambilight}
+          clap={state.clap}
+          routine={state.routine}
+          notify={state.notify}
+          onAction={refresh}
+        />
         <VoicePanel voice={state.voice} onAction={refresh} />
         <CommandsCard />
       </main>

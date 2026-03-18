@@ -1,12 +1,18 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { HslColorPicker } from 'react-colorful';
-import { Lightbulb, LightbulbOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { Lightbulb, LightbulbOff, ChevronDown, ChevronUp, Sun } from 'lucide-react';
 import { api } from '../api';
 
 export default function BulbCard({ bulb, index, onAction }) {
   const [expanded, setExpanded] = useState(false);
   const [brightness, setBrightness] = useState(bulb.brightness);
-  const debounceRef = useRef(null);
+  const colorDebounce = useRef(null);
+  const brightDebounce = useRef(null);
+
+  // Sync brightness when bulb state updates
+  useEffect(() => {
+    setBrightness(bulb.brightness);
+  }, [bulb.brightness]);
 
   const hslColor = {
     h: bulb.hue,
@@ -15,19 +21,19 @@ export default function BulbCard({ bulb, index, onAction }) {
   };
 
   const handleColorChange = useCallback((color) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
+    if (colorDebounce.current) clearTimeout(colorDebounce.current);
+    colorDebounce.current = setTimeout(() => {
       api.setColor(Math.round(color.h), Math.round(color.s), brightness, index).then(onAction);
-    }, 300);
+    }, 100);
   }, [index, brightness, onAction]);
 
   const handleBrightness = useCallback((e) => {
     const val = parseInt(e.target.value);
     setBrightness(val);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
+    if (brightDebounce.current) clearTimeout(brightDebounce.current);
+    brightDebounce.current = setTimeout(() => {
       api.setColor(bulb.hue, bulb.saturation, val, index).then(onAction);
-    }, 300);
+    }, 100);
   }, [bulb.hue, bulb.saturation, index, onAction]);
 
   const togglePower = () => {
@@ -39,7 +45,14 @@ export default function BulbCard({ bulb, index, onAction }) {
       <div className="bulb-header" onClick={() => setExpanded(!expanded)}>
         <div
           className="bulb-preview"
-          style={{ background: bulb.is_on ? `hsl(${bulb.hue}, ${bulb.saturation}%, 50%)` : '#333' }}
+          style={{
+            background: bulb.is_on
+              ? `hsl(${bulb.hue}, ${bulb.saturation}%, ${Math.max(20, brightness * 0.6)}%)`
+              : '#333',
+            boxShadow: bulb.is_on
+              ? `0 0 ${brightness * 0.2}px hsl(${bulb.hue}, ${bulb.saturation}%, 50%)`
+              : 'none',
+          }}
         />
         <div className="bulb-info">
           <span className="bulb-name">{bulb.alias}</span>
@@ -61,15 +74,16 @@ export default function BulbCard({ bulb, index, onAction }) {
             <HslColorPicker color={hslColor} onChange={handleColorChange} />
           </div>
           <div className="brightness-control">
-            <label>Brillo: {brightness}%</label>
+            <Sun size={16} className="brightness-icon" />
             <input
               type="range"
               min="1"
               max="100"
               value={brightness}
               onChange={handleBrightness}
-              className="slider"
+              className="slider brightness-slider"
             />
+            <span className="brightness-value">{brightness}%</span>
           </div>
         </div>
       )}

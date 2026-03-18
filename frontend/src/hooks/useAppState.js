@@ -9,6 +9,10 @@ const MOCK_STATE = {
   scenes: ["Party", "Chill", "Gaming", "Movie", "Sunset", "Focus", "Sex"],
   music: { active: false, mode: null },
   voice: { listening: false },
+  ambilight: { running: false, zones: "split" },
+  clap: { running: false },
+  routine: { active: null },
+  notify: { running: false },
 };
 
 export function useAppState(interval = 2000) {
