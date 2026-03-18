@@ -4,6 +4,7 @@ import {
   Music, Youtube, Gamepad2, Tv, MessageCircle, Mail, Image
 } from 'lucide-react';
 import { api } from '../api';
+import InfoTip from './InfoTip';
 
 const SYSTEM_CMDS = [
   { action: 'shutdown', label: 'Apagar', icon: Power, color: '#e74c3c' },
@@ -36,7 +37,7 @@ export default function PcControlPanel({ onAction }) {
 
   return (
     <section className="panel">
-      <h2 className="panel-title"><Monitor size={20} /> Control PC</h2>
+      <h2 className="panel-title"><Monitor size={20} /> Control PC <InfoTip text="Controla tu PC remotamente: apagar, reiniciar, suspender, bloquear, ajustar volumen o abrir apps. Funciona por voz con Jarvis tambien." /></h2>
 
       <h3 className="panel-subtitle">Sistema</h3>
       <div className="pc-grid">

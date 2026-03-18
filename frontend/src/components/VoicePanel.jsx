@@ -1,5 +1,6 @@
 import { Mic, MicOff } from 'lucide-react';
 import { api } from '../api';
+import InfoTip from './InfoTip';
 
 export default function VoicePanel({ voice, onAction }) {
   const listening = voice?.listening || false;
@@ -10,7 +11,7 @@ export default function VoicePanel({ voice, onAction }) {
 
   return (
     <section className="panel">
-      <h2 className="panel-title">{listening ? <Mic size={20} /> : <MicOff size={20} />} Voz</h2>
+      <h2 className="panel-title">{listening ? <Mic size={20} /> : <MicOff size={20} />} Voz <InfoTip text="Reconocimiento de voz offline con Vosk. Escucha comandos en espanol e ingles por el microfono de tu PC." /></h2>
       <div className="voice-row">
         <button className={`btn ${listening ? 'btn-active' : ''}`} onClick={toggle}>
           {listening ? <><Mic size={16} /> Escuchando...</> : <><MicOff size={16} /> Activar Voz</>}

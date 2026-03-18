@@ -4,6 +4,7 @@ import {
   Zap, XCircle, Tv2
 } from 'lucide-react';
 import { api } from '../api';
+import InfoTip from './InfoTip';
 
 export default function FeaturesPanel({ ambilight, clap, routine, notify, onAction }) {
   const [sleepMin, setSleepMin] = useState(15);
@@ -11,7 +12,7 @@ export default function FeaturesPanel({ ambilight, clap, routine, notify, onActi
 
   return (
     <section className="panel">
-      <h2 className="panel-title"><Zap size={20} /> Features</h2>
+      <h2 className="panel-title"><Zap size={20} /> Features <InfoTip text="Funciones avanzadas: Ambilight sincroniza luces con tu pantalla, aplausos detectan palmadas, rutinas automatizan el encendido/apagado, y notificaciones hacen flash al recibir alertas." /></h2>
 
       {/* Ambilight */}
       <h3 className="panel-subtitle">Ambilight</h3>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Palette, PartyPopper, Coffee, Gamepad2, Film, Sunset, Brain, Heart } from 'lucide-react';
 import { api } from '../api';
+import InfoTip from './InfoTip';
 
 const SCENE_ICONS = {
   Party: PartyPopper,
@@ -22,7 +23,7 @@ export default function ScenesPanel({ scenes, onAction }) {
 
   return (
     <section className="panel">
-      <h2 className="panel-title"><Palette size={20} /> Escenas</h2>
+      <h2 className="panel-title"><Palette size={20} /> Escenas <InfoTip text="Ambientes predefinidos que cambian el color y brillo de todos los bombillos a la vez. Cada escena tiene colores unicos." /></h2>
       <div className="scenes-grid">
         {scenes.map((scene) => {
           const Icon = SCENE_ICONS[scene] || Palette;
