@@ -42,11 +42,19 @@ export function useAppState(interval = 2000) {
     }
   }, []);
 
+  // Optimistic update: immediately update local state without waiting for server
+  const optimistic = useCallback((updater) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      return typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+    });
+  }, []);
+
   useEffect(() => {
     refresh();
     const id = setInterval(refresh, interval);
     return () => clearInterval(id);
   }, [refresh, interval]);
 
-  return { state, error: useMock ? null : error, refresh, useMock };
+  return { state, error: useMock ? null : error, refresh, useMock, optimistic };
 }

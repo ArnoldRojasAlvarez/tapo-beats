@@ -10,7 +10,7 @@ import MasterControls from './components/MasterControls';
 import FeaturesPanel from './components/FeaturesPanel';
 
 export default function App() {
-  const { state, error, refresh, useMock } = useAppState(2000);
+  const { state, error, refresh, useMock, optimistic } = useAppState(2000);
 
   if (!state && !error) {
     return (
@@ -34,10 +34,10 @@ export default function App() {
     <div className="app">
       <Header connected={!error && !useMock} />
       <main className="dashboard">
-        <MasterControls onAction={refresh} />
-        <BulbsPanel bulbs={state.bulbs} onAction={refresh} />
-        <ScenesPanel scenes={state.scenes} onAction={refresh} />
-        <MusicPanel music={state.music} onAction={refresh} />
+        <MasterControls onAction={refresh} optimistic={optimistic} bulbs={state.bulbs} />
+        <BulbsPanel bulbs={state.bulbs} onAction={refresh} optimistic={optimistic} />
+        <ScenesPanel scenes={state.scenes} onAction={refresh} optimistic={optimistic} />
+        <MusicPanel music={state.music} onAction={refresh} optimistic={optimistic} />
         <PcControlPanel onAction={refresh} />
         <FeaturesPanel
           ambilight={state.ambilight}

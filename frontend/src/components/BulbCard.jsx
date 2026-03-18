@@ -3,41 +3,58 @@ import { HslColorPicker } from 'react-colorful';
 import { Lightbulb, LightbulbOff, ChevronDown, ChevronUp, Sun } from 'lucide-react';
 import { api } from '../api';
 
-export default function BulbCard({ bulb, index, onAction }) {
+export default function BulbCard({ bulb, index, onAction, optimistic }) {
   const [expanded, setExpanded] = useState(false);
-  const [brightness, setBrightness] = useState(bulb.brightness);
+  const [localHue, setLocalHue] = useState(bulb.hue);
+  const [localSat, setLocalSat] = useState(bulb.saturation);
+  const [localBri, setLocalBri] = useState(bulb.brightness);
+  const [localOn, setLocalOn] = useState(bulb.is_on);
   const colorDebounce = useRef(null);
   const brightDebounce = useRef(null);
+  const userInteracting = useRef(false);
 
-  // Sync brightness when bulb state updates
+  // Sync from server only when not interacting
   useEffect(() => {
-    setBrightness(bulb.brightness);
-  }, [bulb.brightness]);
+    if (!userInteracting.current) {
+      setLocalHue(bulb.hue);
+      setLocalSat(bulb.saturation);
+      setLocalBri(bulb.brightness);
+      setLocalOn(bulb.is_on);
+    }
+  }, [bulb.hue, bulb.saturation, bulb.brightness, bulb.is_on]);
 
-  const hslColor = {
-    h: bulb.hue,
-    s: bulb.saturation,
-    l: 50,
-  };
+  const hslColor = { h: localHue, s: localSat, l: 50 };
 
   const handleColorChange = useCallback((color) => {
+    userInteracting.current = true;
+    const h = Math.round(color.h);
+    const s = Math.round(color.s);
+    setLocalHue(h);
+    setLocalSat(s);
+
     if (colorDebounce.current) clearTimeout(colorDebounce.current);
     colorDebounce.current = setTimeout(() => {
-      api.setColor(Math.round(color.h), Math.round(color.s), brightness, index).then(onAction);
+      api.setColor(h, s, localBri, index);
+      setTimeout(() => { userInteracting.current = false; }, 500);
     }, 100);
-  }, [index, brightness, onAction]);
+  }, [index, localBri]);
 
   const handleBrightness = useCallback((e) => {
+    userInteracting.current = true;
     const val = parseInt(e.target.value);
-    setBrightness(val);
+    setLocalBri(val);
+
     if (brightDebounce.current) clearTimeout(brightDebounce.current);
     brightDebounce.current = setTimeout(() => {
-      api.setColor(bulb.hue, bulb.saturation, val, index).then(onAction);
+      api.setColor(localHue, localSat, val, index);
+      setTimeout(() => { userInteracting.current = false; }, 500);
     }, 100);
-  }, [bulb.hue, bulb.saturation, index, onAction]);
+  }, [localHue, localSat, index]);
 
   const togglePower = () => {
-    api.setPower(bulb.is_on ? 'off' : 'on', index).then(onAction);
+    const newState = !localOn;
+    setLocalOn(newState);
+    api.setPower(newState ? 'on' : 'off', index).then(onAction);
   };
 
   return (
@@ -46,11 +63,11 @@ export default function BulbCard({ bulb, index, onAction }) {
         <div
           className="bulb-preview"
           style={{
-            background: bulb.is_on
-              ? `hsl(${bulb.hue}, ${bulb.saturation}%, ${Math.max(20, brightness * 0.6)}%)`
+            background: localOn
+              ? `hsl(${localHue}, ${localSat}%, ${Math.max(20, localBri * 0.6)}%)`
               : '#333',
-            boxShadow: bulb.is_on
-              ? `0 0 ${brightness * 0.2}px hsl(${bulb.hue}, ${bulb.saturation}%, 50%)`
+            boxShadow: localOn
+              ? `0 0 ${localBri * 0.2}px hsl(${localHue}, ${localSat}%, 50%)`
               : 'none',
           }}
         />
@@ -59,11 +76,11 @@ export default function BulbCard({ bulb, index, onAction }) {
           <span className="bulb-ip">{bulb.ip}</span>
         </div>
         <div className="bulb-actions">
-          <span className={`badge ${bulb.is_on ? 'badge-on' : 'badge-off'}`}>
-            {bulb.is_on ? 'ON' : 'OFF'}
+          <span className={`badge ${localOn ? 'badge-on' : 'badge-off'}`}>
+            {localOn ? 'ON' : 'OFF'}
           </span>
-          <button className={`btn-icon ${bulb.is_on ? 'btn-on' : 'btn-off'}`} onClick={(e) => { e.stopPropagation(); togglePower(); }}>
-            {bulb.is_on ? <Lightbulb size={20} /> : <LightbulbOff size={20} />}
+          <button className={`btn-icon ${localOn ? 'btn-on' : 'btn-off'}`} onClick={(e) => { e.stopPropagation(); togglePower(); }}>
+            {localOn ? <Lightbulb size={20} /> : <LightbulbOff size={20} />}
           </button>
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </div>
@@ -79,11 +96,11 @@ export default function BulbCard({ bulb, index, onAction }) {
               type="range"
               min="1"
               max="100"
-              value={brightness}
+              value={localBri}
               onChange={handleBrightness}
               className="slider brightness-slider"
             />
-            <span className="brightness-value">{brightness}%</span>
+            <span className="brightness-value">{localBri}%</span>
           </div>
         </div>
       )}
