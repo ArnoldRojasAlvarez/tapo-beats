@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 _controller = None
 _scene_manager = None
 _visualizer = None
+_routines = None
 _loop = None
 
 # Ambiguous commands that need clarification
@@ -99,6 +100,12 @@ _COMMANDS = {
     "bloquear": ("pc", "lock"),
     "lock": ("pc", "lock"),
     "cancelar apagado": ("pc", "cancel_shutdown"),
+    "apagar pantalla": ("pc", "screen_off"),
+    "pantalla off": ("pc", "screen_off"),
+    "encender pantalla": ("pc", "screen_on"),
+    "pantalla on": ("pc", "screen_on"),
+    "buenas noches": ("routine", "sleep"),
+    "buenos dias": ("routine", "wake"),
     # Volume
     "mutear": ("pc", "mute"),
     "mute": ("pc", "mute"),
@@ -145,6 +152,7 @@ _HELP_CARD = (
     "  apagar pc · reiniciar\n"
     "  suspender · bloquear\n"
     "  cancelar apagado\n"
+    "  apagar pantalla · encender pantalla\n"
     "\n"
     "🔊 VOLUMEN\n"
     "  subir volumen · bajar volumen\n"
@@ -154,6 +162,9 @@ _HELP_CARD = (
     "  spotify · youtube · steam\n"
     "  crunchyroll · whatsapp\n"
     "  outlook · wallpaper\n"
+    "\n"
+    "🌙 RUTINAS\n"
+    "  buenas noches · buenos dias\n"
     "\n"
     "💬 Di 'ayuda' para ver esto de nuevo"
 )
@@ -197,6 +208,13 @@ def _execute_action(cmd_type: str, cmd_value: str) -> str:
         return "Apagando luces y P.C."
     elif cmd_type == "pc":
         return execute_pc_command(cmd_value)
+    elif cmd_type == "routine":
+        if _routines is None:
+            return "Rutinas no disponibles"
+        if cmd_value == "sleep":
+            return _routines.sleep_routine(15, True)
+        elif cmd_value == "wake":
+            return _routines.wake_routine(5)
     return "Comando no reconocido"
 
 
@@ -406,10 +424,11 @@ sb.add_request_handler(SessionEndedHandler())
 skill = sb.create()
 
 
-def init_alexa_skill(controller, scene_manager, visualizer, loop):
+def init_alexa_skill(controller, scene_manager, visualizer, loop, routines=None):
     """Initialize the Alexa skill with shared components."""
-    global _controller, _scene_manager, _visualizer, _loop
+    global _controller, _scene_manager, _visualizer, _routines, _loop
     _controller = controller
     _scene_manager = scene_manager
     _visualizer = visualizer
+    _routines = routines
     _loop = loop

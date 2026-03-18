@@ -88,11 +88,11 @@ class RoutineManager:
             self._run_async(self._controller.turn_off())
             logger.info("Sleep routine: lights off")
 
-            # Suspend PC
+            # Turn off screen (PC stays running so server keeps working)
             if suspend_pc:
                 time.sleep(3)
-                execute_pc_command("sleep")
-                logger.info("Sleep routine: PC suspended")
+                execute_pc_command("screen_off")
+                logger.info("Sleep routine: screen off, server still running")
 
         except Exception:
             logger.exception("Sleep routine error")

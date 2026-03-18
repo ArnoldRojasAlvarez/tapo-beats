@@ -43,6 +43,12 @@ def execute_pc_command(action: str) -> str:
         elif action == "cancel_shutdown":
             subprocess.Popen("shutdown /a", shell=True)
             return "Apagado cancelado"
+        elif action == "screen_off":
+            _turn_off_screen()
+            return "Pantalla apagada"
+        elif action == "screen_on":
+            _turn_on_screen()
+            return "Pantalla encendida"
 
         # Volume commands
         elif action == "mute":
@@ -68,6 +74,22 @@ def execute_pc_command(action: str) -> str:
     except Exception:
         logger.exception("Error executing PC command: %s", action)
         return f"Error ejecutando: {action}"
+
+
+def _turn_off_screen() -> None:
+    """Turn off the monitor (PC stays running)."""
+    import ctypes
+    SC_MONITORPOWER = 0xF170
+    HWND_BROADCAST = 0xFFFF
+    WM_SYSCOMMAND = 0x0112
+    ctypes.windll.user32.SendMessageW(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, 2)
+
+
+def _turn_on_screen() -> None:
+    """Turn on the monitor by simulating mouse movement."""
+    import ctypes
+    ctypes.windll.user32.mouse_event(0x0001, 1, 0, 0, 0)  # MOUSEEVENTF_MOVE
+    ctypes.windll.user32.mouse_event(0x0001, -1, 0, 0, 0)
 
 
 def _send_media_key(vk_code: int) -> None:

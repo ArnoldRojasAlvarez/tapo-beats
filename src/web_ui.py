@@ -510,7 +510,7 @@ def create_app(
 
     _clap = ClapDetector(callback=_clap_toggle)
     # Init Alexa skill
-    init_alexa_skill(controller, scene_manager, visualizer, loop)
+    init_alexa_skill(controller, scene_manager, visualizer, loop, _routines)
     _alexa_handler = WebserviceSkillHandler(
         skill=skill, verify_signature=True, verify_timestamp=True
     )
